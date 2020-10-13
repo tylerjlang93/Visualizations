@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+
+
+@author: tyler
+"""
+
+import pandas as pd
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+
+
+data = pd.read_csv('./Indicators.csv')
+# data.shape
+# data.head()
+# data.columns
+countries = data['CountryName'].unique().tolist()
+country_codes = data['CountryCode'].unique().tolist()
+indicators = data['IndicatorName'].unique().tolist()
+years = data['Year'].unique().tolist()
+# print(min(years), ' to ', max(years))
+stage = data[data['IndicatorName'].str.contains('CO2 emissions \(metric') & data['CountryCode'].str.contains('USA')]
+
+
+#/
+plt.bar(stage['Year'],stage['Value'])
+#plt.bar(stage['Year'].values, stage['Value'].values)
+plt.show()
+#/
+
+#/
+plt.plot(stage['Year'],stage['Value'])
+plt.xlabel('Year')
+plt.ylabel(stage['IndicatorName'].iloc[0])
+plt.title('Co2 Emissions in USA')
+plt.axis([1959,2011,0,25])
+plt.show()
+#/
+
+plt.hist(stage['Value'],bins=10, density=False, facecolor='blue')
+plt.xlabel(stage['IndicatorName'].iloc[0])
+plt.ylabel('# of Years')
+plt.title('Histogram Example')
+plt.grid(True)
+
+
+#Plotting all values within 1 Std!
+lower_sd = stage['Value'].mean() - stage['Value'].std()
+upper_sd = stage['Value'].mean() + stage['Value'].std()
+range_std_hist = [x for x in stage[:]['Value'] if x>lower_sd and x<upper_sd]
+plt.hist(range_std_hist, bins=10,density=False, facecolor='green')
+plt.xlabel(stage['IndicatorName'].iloc[0])
+plt.ylabel('# of Years')
+plt.title('Histogram Example')
+plt.grid(True)
+#####################################################################################
+
+
+
+#Looking at USA vs other countries in 2011
+##########################################
+hist_indicator = 'CO2 emissions \(metric'
+hist_year = 2011
+co2_2011 = data[data['IndicatorName'].str.contains(hist_indicator) & data['Year'].isin([hist_year])]
+
+fig, ax = plt.subplots()
+ax.annotate("USA",
+            xy=(18,5), xycoords='data',
+            xytext = (18,30), textcoords='data',
+            arrowprops = dict(arrowstyle='->',
+                              connectionstyle = 'arc3'),
+            )
+plt.hist(co2_2011['Value'], 10, density=False,facecolor='green')
+plt.xlabel(stage['IndicatorName'].iloc[0])
+plt.ylabel('# of Countries')
+plt.title('Histogram of CO2 Emissions Per Capita')
+# plt.axis([10,22,0,14])
+plt.grid(True)
+plt.show()
+###########################################
+
+
+
+
+
+# Looking at GDP per cap and CO2 emissions in USA
+
+gdp_indicator = 'GDP per capita \(constant 2005'
+gdp_country = 'USA'
+gdp_stage = data[data['IndicatorName'].str.contains(gdp_indicator) & data['CountryCode'].str.contains(gdp_country)]
+
+
+#
+#max(gdp_stage['Value'])
+plt.plot(gdp_stage['Year'],gdp_stage['Value'])
+plt.xlabel('Year')
+plt.ylabel(gdp_stage['IndicatorName'].iloc[0])
+plt.title('GDP per Capita USA')
+plt.axis([1959,2011,0,47000]) # max y value found with max fxn above
+plt.show()
+#
+
+# To compare to CO2 data, we need to trim the years of gdp_stage, so they are equal.
+gdp_stage_trunc = gdp_stage[gdp_stage['Year'] < 2012]
+
+
+#plotting correlation
+# Using subplots allows us to define things a little more precisely, but usually used for +1 plots in one.
+
+fig, axis = plt.subplots()
+axis.yaxis.grid(True)
+axis.set_title('CO2 Emissions vs. GDP \(per capita\)', fontsize=10)
+axis.set_xlabel(gdp_stage_trunc['IndicatorName'].iloc[0], fontsize=10)
+axis.set_ylabel(stage['IndicatorName'].iloc[0], fontsize=10)
+X = gdp_stage_trunc['Value']
+Y = stage['Value']
+axis.scatter(X,Y)
+plt.show()
+
+#Or more simply
+plt.scatter(gdp_stage_trunc['Value'],stage['Value'])
+plt.grid(True)
+plt.xlabel(gdp_stage_trunc['IndicatorName'].iloc[0])
+plt.ylabel(stage['IndicatorName'].iloc[0])
+plt.title('Co2 emissions vs GDP')
+
+#Looking at correlation coefficient
+np.corrcoef(gdp_stage_trunc['Value'],stage['Value']) #low!!
+
+
+
+
+
+
+
+#OWN ANALYSIS PRACTICE#
